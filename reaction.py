@@ -1,8 +1,12 @@
+# Author: Jinru Yao
+# Date: 9/4/2025
+
 from gpiozero import LED, Button
 from time import sleep
+from random import uniform
 
 led = LED(4)
 
 led.on()
-sleep(5)
+sleep(uniform(5, 10))
 led.off
