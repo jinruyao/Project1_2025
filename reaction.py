@@ -5,57 +5,52 @@ from gpiozero import LED, Button
 from time import sleep
 from random import uniform
 
-# Initialize GPIO components
+# Initialize hardware components
 led = LED(4)
 right_button = Button(15)
 left_button = Button(14)
 
 # Get player names
-left_name = input('Left player name is: ')
-right_name = input('Right player name is: ')
+left_name = input('Left player name is ')
+right_name = input('Right player name is ')
 
-# Initialize scores for both players
-left_score = 0
-right_score = 0
+# Use a dictionary to store scores, avoiding the use of nonlocal
+scores = {'left': 0, 'right': 0}
+rounds = 5  # Set number of game rounds
+accept_input = False  # Flag to control when button presses should be accepted
 
 def pressed(button):
-    global left_score, right_score
-    # Determine which button was pressed and update the score accordingly
-    if button.pin.number == 14:
-        print(left_name + ' won this round!')
-        left_score += 1
-    else:
-        print(right_name + ' won this round!')
-        right_score += 1
-    # Clear button press event handlers to prepare for the next round
-    right_button.when_pressed = None
-    left_button.when_pressed = None
+    global accept_input, scores
+    if accept_input:  # Only process button press if in accept state
+        if button.pin.number == 14:  # If left button is pressed
+            scores['left'] += 1
+            print(left_name + ' won this round!')
+        else:  # If right button is pressed
+            scores['right'] += 1
+            print(right_name + ' won this round!')
+        accept_input = False  # Stop accepting inputs after first press
 
-# Main game loop
-rounds = int(input("Enter the number of rounds you want to play: "))
 for i in range(rounds):
-    # Set up button press event handlers for the current round
+    print(f"\nRound {i + 1} begins!")
+    led.on()
+    sleep(uniform(5,10))  # Light stays on for a random period before turning off
+    led.off()
+    
+    accept_input = True  # Allow button presses now that the light is off
     right_button.when_pressed = pressed
     left_button.when_pressed = pressed
     
-    led.on()
-    sleep_time = uniform(5, 10)
-    sleep(sleep_time) # Keep the LED on for a random period between 5 to 10 seconds
-    led.off()
+    # Wait for a short duration to ensure the button press event is captured
+    sleep(2)
+    
+    print(f"Scores: {left_name} {scores['left']}, {right_name} {scores['right']}")
 
-    # Wait until one of the buttons is pressed
-    while not right_button.is_pressed and not left_button.is_pressed:
-        sleep(0.1) # Prevent high CPU usage by sleeping briefly
-
-# Display the final scores after all rounds have been played
+# Determine the winner based on the final scores
 print("\nGame Over!")
-print(f"{left_name}'s total score: {left_score}")
-print(f"{right_name}'s total score: {right_score}")
-
-# Determine the winner based on the total scores
-if left_score > right_score:
-    print(f"{left_name} wins!")
-elif right_score > left_score:
-    print(f"{right_name} wins!")
+if scores['left'] > scores['right']:
+    print(f"{left_name} wins with {scores['left']} points!")
+elif scores['right'] > scores['left']:
+    print(f"{right_name} wins with {scores['right']} points!")
 else:
     print("It's a tie!")
+
