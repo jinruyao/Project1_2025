@@ -4,7 +4,6 @@
 from gpiozero import LED, Button
 from time import sleep, time
 from random import uniform
-import os
 
 # Initialize a flag to control the main loop
 game_over = False
@@ -12,17 +11,19 @@ game_over = False
 try:
     # Initialize the LED conntection
     led = LED(4)
-    right_button = Button(15)
     left_button = Button(14)
+    right_button = Button(15) 
 
     # Get the name of the players
     left_name = input('Left player name is: ')
     right_name = input('Right player name is: ')
 
     # Control the LED
+    print("Game is ready!")
     led.on()
     sleep_duration = uniform(5, 10)
     sleep(sleep_duration)
+    print("The light is off! Press the button!")
     led.off()
 
     # Record the time when the LED turned off
@@ -31,17 +32,20 @@ try:
     # Define a function to be called when a button pressed
     def pressed(button):
         global game_over
-        print(f"Button pressed: {button.pin.number}")  # 添加调试信息
-        # Record the time when the button was pressed
-        end_time = time()
-        # Calculate the time taken to press the button after the LED turned off
-        reaction_time = end_time - start_time
-        if button.pin.number == 14:
-            print(left_name + " won the game in "+ str(reaction_time))
-        else:
-            print(right_name + " won the game in " + str(reaction_time))
-        # Set the flag to exit the main loop
-        game_over = True
+        if start_time is None:
+            return
+        if not game_over:
+            # Set the flag to exit the main loop
+            game_over = True
+            # Record the time when the button was pressed
+            end_time = time()
+            # Calculate the time taken to press the button after the LED turned off
+            reaction_time = end_time - start_time
+            if button.pin.number == 14:
+                print(left_name + " won the game in "+ str(reaction_time))
+            elif button.pin.number == 15:
+                print(right_name + " won the game in " + str(reaction_time))
+            
 
     right_button.when_pressed = pressed
     left_button.when_pressed = pressed
@@ -60,5 +64,3 @@ finally:
         right_button.close()
     if 'left_button' in locals():
         left_button.close()
-    # Optionally, you can use os._exit(0) here for immediate termination
-    # os._exit(0)
